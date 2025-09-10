@@ -22,13 +22,14 @@
     <meta content="summary_large_image" name="twitter:card" />
     <meta content="Esse Mobility Dashboard" name="generator" />
 
- 
-
     <!-- favicon -->
     <link rel="shortcut icon" href="{{ url('logo.png') }}" />
 
     <!-- Font Awesome Icon -->
-    <link rel="stylesheet" href="../../cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referre..rpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Style css -->
     <link href="{{ url('auth/css/style.min.css?v=' .env('CACHE_VERSION')) }}" rel="stylesheet" type="text/css">
@@ -77,6 +78,158 @@
         .menu-title {
             list-style: none;
             margin-left: -30px;
+        }
+
+        /* Custom Alert Styles - High Specificity to Override Existing CSS */
+        .custom-alert-success {
+            background-color: #d1fae5 !important;
+            border: 1px solid #10b981 !important;
+            color: #065f46 !important;
+            padding: 12px 16px !important;
+            border-radius: 8px !important;
+            margin-top: 16px !important;
+            font-size: 14px !important;
+            display: block !important;
+        }
+
+        .custom-alert-error {
+            background-color: #fee2e2 !important;
+            border: 1px solid #ef4444 !important;
+            color: #991b1b !important;
+            padding: 12px 16px !important;
+            border-radius: 8px !important;
+            margin-top: 16px !important;
+            font-size: 14px !important;
+            display: block !important;
+        }
+
+        .custom-alert-error ul {
+            margin: 0 !important;
+            padding-left: 20px !important;
+            list-style-type: disc !important;
+        }
+
+        .custom-alert-error li {
+            margin: 4px 0 !important;
+            color: #991b1b !important;
+        }
+
+        /* Custom Input Error Styles */
+        .custom-input-error {
+            border-color: #ef4444 !important;
+            border-width: 1px !important;
+        }
+
+        .custom-input-error:focus {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .custom-error-text {
+            color: #ef4444 !important;
+            font-size: 12px !important;
+            margin-top: 4px !important;
+            display: block !important;
+        }
+
+        /* Custom Button Styles */
+        .custom-btn-primary {
+            background-color: darkgreen !important;
+            color: white !important;
+            padding: 10px 24px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        .custom-btn-primary:hover {
+            background-color: #006400 !important;
+        }
+
+        .custom-btn-primary:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Custom Spinner */
+        .custom-spinner {
+            animation: spin 1s linear infinite !important;
+            width: 16px !important;
+            height: 16px !important;
+            display: none !important;
+        }
+
+        .custom-spinner.show {
+            display: inline-block !important;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Form Input Styles */
+        .custom-input {
+            width: 100% !important;
+            padding: 10px 16px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            color: #6b7280 !important;
+            background-color: white !important;
+        }
+
+        .custom-input:focus {
+            outline: none !important;
+            border-color: #9ca3af !important;
+        }
+
+        .custom-label {
+            display: block !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            margin-bottom: 8px !important;
+            color: #374151 !important;
+        }
+
+        /* Demo Credentials Box */
+        .demo-credentials {
+            margin-top: 32px !important;
+            padding: 16px !important;
+            background-color: #f9fafb !important;
+            border-radius: 8px !important;
+            border: 1px solid #e5e7eb !important;
+        }
+
+        .demo-credentials h3 {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            color: #374151 !important;
+            margin-bottom: 8px !important;
+        }
+
+        .demo-credentials p {
+            font-size: 12px !important;
+            color: #6b7280 !important;
+            margin: 4px 0 !important;
+        }
+
+        /* Checkbox Styles */
+        .custom-checkbox {
+            width: 16px !important;
+            height: 16px !important;
+            accent-color: darkgreen !important;
+        }
+
+        .custom-checkbox-label {
+            margin-left: 8px !important;
+            font-size: 14px !important;
+            color: #374151 !important;
         }
     </style>
 
