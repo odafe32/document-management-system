@@ -41,22 +41,35 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:staff'])->prefix('staff')->name('staff.')->group(function () {
         Route::controller(StaffController::class)->group(function () {
             // Dashboard
-             Route::get('/dashboard', [StaffController::class, 'showDashboard'])->name('dashboard');
-            Route::get('/profile', [StaffController::class, 'showProfile'])->name('profile');
-            Route::get('/profile/edit', [StaffController::class, 'editProfile'])->name('profile.edit');
-            Route::post('/profile/update', [StaffController::class, 'updateProfile'])->name('profile.update');
+            Route::get('/dashboard', 'showDashboard')->name('dashboard');
+            Route::get('/profile', 'showProfile')->name('profile');
+            Route::get('/profile/edit', 'editProfile')->name('profile.edit');
+            Route::post('/profile/update', 'updateProfile')->name('profile.update');
             
             // Document Management Routes
-            Route::get('/documents', [StaffController::class, 'showDocuments'])->name('documents');
-            Route::post('/documents', [StaffController::class, 'storeDocument'])->name('documents.store');
-            Route::get('/documents/{document}/edit', [StaffController::class, 'editDocument'])->name('documents.edit');
-            Route::put('/documents/{document}', [StaffController::class, 'updateDocument'])->name('documents.update');
-            Route::delete('/documents/{document}', [StaffController::class, 'destroyDocument'])->name('documents.destroy');
-            Route::get('/documents/{document}/download', [StaffController::class, 'downloadDocument'])->name('documents.download');
+            Route::get('/documents', 'showDocuments')->name('documents');
+            Route::post('/documents', 'storeDocument')->name('documents.store');
+            Route::get('/documents/{document}/edit', 'editDocument')->name('documents.edit');
+            Route::put('/documents/{document}', 'updateDocument')->name('documents.update');
+            Route::delete('/documents/{document}', 'destroyDocument')->name('documents.destroy');
+            Route::get('/documents/{document}/download', 'downloadDocument')->name('documents.download');
             
-            // Other existing routes...
-            Route::get('/announcements', [StaffController::class, 'showAnnouncement'])->name('announcements');
-            Route::get('/feedbacks', [StaffController::class, 'showFeedbacks'])->name('feedbacks');
+            // Announcement routes
+            Route::get('/announcements', 'showAnnouncements')->name('announcements');
+            Route::get('/announcements/create', 'createAnnouncement')->name('announcements.create');
+            Route::post('/announcements', 'storeAnnouncement')->name('announcements.store');
+            Route::get('/announcements/{announcement}/edit', 'editAnnouncement')->name('announcements.edit');
+            Route::put('/announcements/{announcement}', 'updateAnnouncement')->name('announcements.update');
+            Route::delete('/announcements/{announcement}', 'destroyAnnouncement')->name('announcements.destroy');
+            Route::get('/announcements/{announcement}/download', 'downloadAnnouncementAttachment')->name('announcements.download');
+
+            // Feedback routes
+            Route::get('/feedbacks', 'showFeedbacks')->name('feedbacks');
+            Route::get('/feedbacks/{feedback}/details', 'getFeedbackDetails')->name('feedbacks.details');
+            Route::post('/feedbacks/{feedback}/assign', 'assignFeedback')->name('feedbacks.assign');
+            Route::post('/feedbacks/{feedback}/reply', 'replyFeedback')->name('feedbacks.reply');
+            Route::patch('/feedbacks/{feedback}/status', 'updateFeedbackStatus')->name('feedbacks.status');
+            Route::get('/feedbacks/{feedback}/download', 'downloadFeedbackAttachment')->name('feedbacks.download');
         });
     });
 

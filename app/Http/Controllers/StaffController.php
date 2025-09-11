@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Document;
+use App\Models\Feedback;
 use Illuminate\Http\Request;
+use App\Models\Announcement;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -14,17 +16,57 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
+{public function showDashboard()
 {
-    public function showDashboard()
-    {
-        $viewData = [
-           'meta_title'=> 'Staff Dashboard | Nsuk Document Management System',
-           'meta_desc'=> 'Departmental Information Management System with document management and announcements',
-           'meta_image'=> url('logo.png'),
-        ];
+    $stats = [
+        'documents' => [
+            'total' => Document::where('user_id', Auth::id())->count(),
+            'public' => Document::where('user_id', Auth::id())->where('visibility', 'public')->count(),
+            'private' => Document::where('user_id', Auth::id())->where('visibility', 'private')->count(),
+            'this_month' => Document::where('user_id', Auth::id())->whereMonth('created_at', now()->month)->count(),
+        ],
+        'announcements' => [
+            'total' => Announcement::where('user_id', Auth::id())->count(),
+            'active' => Announcement::where('user_id', Auth::id())->where('is_active', true)->count(),
+            'expired' => Announcement::where('user_id', Auth::id())->where('expiry_date', '<', now())->count(),
+            'this_week' => Announcement::where('user_id', Auth::id())->where('created_at', '>=', now()->startOfWeek())->count(),
+        ],
+        'feedbacks' => [
+            'total' => Feedback::count(),
+            'pending' => Feedback::pending()->count(),
+            'in_review' => Feedback::inReview()->count(),
+            'resolved' => Feedback::resolved()->count(),
+        ],
+        'system' => [
+            'storage_used' => '45 MB',
+            'files_count' => Document::count(),
+            'storage_percentage' => 15,
+        ]
+    ];
 
-        return view('staff.dashboard', $viewData);
-    }
+    $recentDocuments = Document::where('user_id', Auth::id())->latest()->take(5)->get();
+    $recentAnnouncements = Announcement::where('user_id', Auth::id())->latest()->take(5)->get();
+    $recentFeedbacks = Feedback::latest()->take(5)->with('user')->get();
+    
+    $recentActivity = [
+        ['user' => 'System', 'text' => 'Database backup completed', 'time' => '2 hours ago'],
+        ['user' => Auth::user()->name, 'text' => 'Uploaded new document', 'time' => '3 hours ago'],
+        ['user' => 'Student', 'text' => 'New feedback received', 'time' => '5 hours ago'],
+    ];
+
+    $viewData = [
+        'meta_title' => 'Staff Dashboard | Nsuk Document Management System',
+        'meta_desc' => 'Staff dashboard with analytics and quick actions',
+        'meta_image' => url('logo.png'),
+        'stats' => $stats,
+        'recentDocuments' => $recentDocuments,
+        'recentAnnouncements' => $recentAnnouncements,
+        'recentFeedbacks' => $recentFeedbacks,
+        'recentActivity' => $recentActivity,
+    ];
+
+    return view('staff.dashboard', $viewData);
+}
 
     public function showProfile()
     {
@@ -310,26 +352,446 @@ class StaffController extends Controller
         // Return file download
         return Storage::disk('public')->download($document->file_path, $document->title . '.' . $document->file_extension);
     }
-
-    public function showAnnouncement()
+  public function showAnnouncements(Request $request)
     {
-        $viewData = [
-           'meta_title'=> 'Announcements | Nsuk Document Management System',
-           'meta_desc'=> 'Departmental Information Management System with document management and announcements',
-           'meta_image'=> url('logo.png'),
+        $query = Announcement::with('user')
+            ->where('user_id', Auth::id())
+            ->latest();
+
+        // Apply filters
+        if ($request->filled('category')) {
+            $query->byCategory($request->category);
+        }
+
+        if ($request->filled('visibility')) {
+            $query->byVisibility($request->visibility);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->active()->notExpired();
+            } elseif ($request->status === 'expired') {
+                $query->where('expiry_date', '<', now()->toDateString());
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        $announcements = $query->paginate(10);
+
+        // Statistics
+        $stats = [
+            'total' => Announcement::where('user_id', Auth::id())->count(),
+            'active' => Announcement::where('user_id', Auth::id())->active()->notExpired()->count(),
+            'expired' => Announcement::where('user_id', Auth::id())->where('expiry_date', '<', now()->toDateString())->count(),
+            'views' => Announcement::where('user_id', Auth::id())->sum('views'),
         ];
 
-        return view('staff.announcement', $viewData);
+        $viewData = [
+            'meta_title' => 'Announcements | Nsuk Document Management System',
+            'meta_desc' => 'Manage announcements and notifications',
+            'meta_image' => url('logo.png'),
+            'announcements' => $announcements,
+            'stats' => $stats,
+            'currentCategory' => $request->category,
+            'currentVisibility' => $request->visibility,
+            'currentStatus' => $request->status,
+            'currentSearch' => $request->search,
+        ];
+
+        return view('staff.announcements', $viewData);
     }
 
-    public function showFeedbacks()
+    public function createAnnouncement()
     {
         $viewData = [
-           'meta_title'=> 'Feedbacks | Nsuk Document Management System',
-           'meta_desc'=> 'Departmental Information Management System with document management and announcements',
-           'meta_image'=> url('logo.png'),
+            'meta_title' => 'Create Announcement | Nsuk Document Management System',
+            'meta_desc' => 'Create a new announcement',
+            'meta_image' => url('logo.png'),
+        ];
+
+        return view('staff.announcements-create', $viewData);
+    }
+
+    public function storeAnnouncement(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
+            'category' => 'required|in:general,academic,exam,timetable,memo,other',
+            'visibility' => 'required|in:public,staff,student',
+            'expiry_date' => 'nullable|date|after:today',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
+        ]);
+
+        try {
+            $announcementData = [
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                'body' => $request->body,
+                'category' => $request->category,
+                'visibility' => $request->visibility,
+                'expiry_date' => $request->expiry_date,
+                'is_active' => $request->has('is_active'),
+            ];
+
+            // Handle file attachment
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('announcements', $filename, 'public');
+                $announcementData['attachment'] = $path;
+            }
+
+            Announcement::create($announcementData);
+
+            return redirect()->route('staff.announcements')->with('success', 'Announcement created successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Announcement creation failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to create announcement. Please try again.'])->withInput();
+        }
+    }
+
+    public function editAnnouncement(Announcement $announcement)
+    {
+        // Ensure user can only edit their own announcements
+        if ($announcement->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $viewData = [
+            'meta_title' => 'Edit Announcement | Nsuk Document Management System',
+            'meta_desc' => 'Edit announcement details',
+            'meta_image' => url('logo.png'),
+            'announcement' => $announcement,
+        ];
+
+        return view('staff.announcements-edit', $viewData);
+    }
+
+    public function updateAnnouncement(Request $request, Announcement $announcement)
+    {
+        // Ensure user can only update their own announcements
+        if ($announcement->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
+            'category' => 'required|in:general,academic,exam,timetable,memo,other',
+            'visibility' => 'required|in:public,staff,student',
+            'expiry_date' => 'nullable|date|after:today',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
+        ]);
+
+        try {
+            $announcementData = [
+                'title' => $request->title,
+                'body' => $request->body,
+                'category' => $request->category,
+                'visibility' => $request->visibility,
+                'expiry_date' => $request->expiry_date,
+                'is_active' => $request->has('is_active'),
+            ];
+
+            // Handle file attachment
+            if ($request->hasFile('attachment')) {
+                // Delete old attachment if exists
+                if ($announcement->attachment && Storage::disk('public')->exists($announcement->attachment)) {
+                    Storage::disk('public')->delete($announcement->attachment);
+                }
+
+                $file = $request->file('attachment');
+                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('announcements', $filename, 'public');
+                $announcementData['attachment'] = $path;
+            }
+
+            $announcement->update($announcementData);
+
+            return redirect()->route('staff.announcements')->with('success', 'Announcement updated successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Announcement update failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update announcement. Please try again.'])->withInput();
+        }
+    }
+
+    public function destroyAnnouncement(Announcement $announcement)
+    {
+        // Ensure user can only delete their own announcements
+        if ($announcement->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            // Delete attachment if exists
+            if ($announcement->attachment && Storage::disk('public')->exists($announcement->attachment)) {
+                Storage::disk('public')->delete($announcement->attachment);
+            }
+
+            $announcement->delete();
+
+            return redirect()->route('staff.announcements')->with('success', 'Announcement deleted successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Announcement deletion failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to delete announcement. Please try again.']);
+        }
+    }
+
+    public function downloadAnnouncementAttachment(Announcement $announcement)
+    {
+        if (!$announcement->attachment || !Storage::disk('public')->exists($announcement->attachment)) {
+            abort(404, 'Attachment not found.');
+        }
+
+        return Storage::disk('public')->download($announcement->attachment, $announcement->attachment_filename);
+    }
+
+
+
+
+
+public function showFeedback(Feedback $feedback)
+{
+    // Mark as read if not already read
+    if (!$feedback->is_read) {
+        $feedback->markAsRead();
+    }
+
+    $viewData = [
+        'meta_title' => 'Feedback Details | Nsuk Document Management System',
+        'meta_desc' => 'View and respond to student feedback',
+        'meta_image' => url('logo.png'),
+        'feedback' => $feedback->load(['user', 'staff']),
+    ];
+
+    return view('staff.feedback-details', $viewData);
+}
+
+
+ public function showFeedbacks(Request $request)
+    {
+        $query = Feedback::with(['user', 'staff'])
+            ->latest();
+
+        // Apply filters
+        if ($request->filled('status')) {
+            if ($request->status === 'pending') {
+                $query->pending();
+            } elseif ($request->status === 'in_review') {
+                $query->inReview();
+            } elseif ($request->status === 'resolved') {
+                $query->resolved();
+            }
+        }
+
+        if ($request->filled('priority')) {
+            $query->byPriority($request->priority);
+        }
+
+        if ($request->filled('assigned')) {
+            if ($request->assigned === 'me') {
+                $query->where('staff_id', Auth::id());
+            } elseif ($request->assigned === 'unassigned') {
+                $query->whereNull('staff_id');
+            }
+        }
+
+        if ($request->filled('read')) {
+            if ($request->read === 'unread') {
+                $query->unread();
+            } elseif ($request->read === 'read') {
+                $query->where('is_read', true);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        $feedbacks = $query->paginate(15);
+
+        // Statistics
+        $stats = [
+            'total' => Feedback::count(),
+            'pending' => Feedback::pending()->count(),
+            'in_review' => Feedback::inReview()->count(),
+            'resolved' => Feedback::resolved()->count(),
+            'unread' => Feedback::unread()->count(),
+            'assigned_to_me' => Feedback::where('staff_id', Auth::id())->count(),
+        ];
+
+        $viewData = [
+            'meta_title' => 'Feedbacks | Nsuk Document Management System',
+            'meta_desc' => 'Manage student feedbacks and responses',
+            'meta_image' => url('logo.png'),
+            'feedbacks' => $feedbacks,
+            'stats' => $stats,
+            'currentStatus' => $request->status,
+            'currentPriority' => $request->priority,
+            'currentAssigned' => $request->assigned,
+            'currentRead' => $request->read,
+            'currentSearch' => $request->search,
         ];
 
         return view('staff.feedbacks', $viewData);
+    }
+
+    public function getFeedbackDetails(Feedback $feedback)
+    {
+        try {
+            // Mark as read if not already read
+            if (!$feedback->is_read) {
+                $feedback->markAsRead();
+            }
+
+            $feedback->load(['user', 'staff']);
+
+            return response()->json([
+                'success' => true,
+                'feedback' => [
+                    'id' => $feedback->id,
+                    'subject' => $feedback->subject,
+                    'message' => $feedback->message,
+                    'status' => $feedback->status,
+                    'status_display' => $feedback->status_display,
+                    'status_badge_class' => $feedback->status_badge_class,
+                    'priority' => $feedback->priority,
+                    'priority_display' => $feedback->priority_display,
+                    'priority_badge_class' => $feedback->priority_badge_class,
+                    'time_since_submission' => $feedback->time_since_submission,
+                    'has_reply' => $feedback->has_reply,
+                    'reply' => $feedback->reply,
+                    'replied_at_human' => $feedback->replied_at ? $feedback->replied_at->diffForHumans() : null,
+                    'attachment' => $feedback->attachment,
+                    'attachment_filename' => $feedback->attachment_filename,
+                    'staff_id' => $feedback->staff_id,
+                    'user' => [
+                        'name' => $feedback->user->name,
+                        'email' => $feedback->user->email,
+                    ],
+                    'staff' => $feedback->staff ? [
+                        'name' => $feedback->staff->name,
+                    ] : null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get feedback details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load feedback details.'
+            ], 500);
+        }
+    }
+
+    public function assignFeedback(Request $request, Feedback $feedback)
+    {
+        $request->validate([
+            'action' => 'required|in:assign_to_me,unassign',
+        ]);
+
+        try {
+            if ($request->action === 'assign_to_me') {
+                $feedback->assignToStaff(Auth::id());
+                $message = 'Feedback assigned to you successfully!';
+            } else {
+                $feedback->update([
+                    'staff_id' => null,
+                    'status' => 'pending'
+                ]);
+                $message = 'Feedback unassigned successfully!';
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Feedback assignment failed: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to update assignment.'], 500);
+            }
+            
+            return back()->withErrors(['error' => 'Failed to update assignment. Please try again.']);
+        }
+    }
+
+    public function replyFeedback(Request $request, Feedback $feedback)
+    {
+        $request->validate([
+            'reply' => 'required|string|min:10',
+        ]);
+
+        try {
+            $feedback->addReply($request->reply, Auth::id());
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Reply sent successfully!']);
+            }
+
+            return back()->with('success', 'Reply sent successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Feedback reply failed: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to send reply.'], 500);
+            }
+            
+            return back()->withErrors(['error' => 'Failed to send reply. Please try again.']);
+        }
+    }
+
+    public function updateFeedbackStatus(Request $request, Feedback $feedback)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,in_review,resolved',
+            'priority' => 'sometimes|in:1,2,3',
+        ]);
+
+        try {
+            $updateData = ['status' => $request->status];
+            
+            if ($request->filled('priority')) {
+                $updateData['priority'] = $request->priority;
+            }
+
+            $feedback->update($updateData);
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Status updated successfully!']);
+            }
+
+            return back()->with('success', 'Feedback status updated successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Feedback status update failed: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to update status.'], 500);
+            }
+            
+            return back()->withErrors(['error' => 'Failed to update status. Please try again.']);
+        }
+    }
+
+    public function downloadFeedbackAttachment(Feedback $feedback)
+    {
+        if (!$feedback->attachment || !Storage::disk('public')->exists($feedback->attachment)) {
+            abort(404, 'Attachment not found.');
+        }
+
+        return Storage::disk('public')->download($feedback->attachment, $feedback->attachment_filename);
     }
 }

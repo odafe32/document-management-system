@@ -78,9 +78,9 @@
 
         /* Custom Alert Styles - High Specificity to Override Existing CSS */
         .custom-alert-success {
-            background-color: #d1fae5 !important;
-            border: 1px solid #10b981 !important;
-            color: #065f46 !important;
+            background-color: #005f2e !important;
+            border: 1px solid #000e09 !important;
+            color: #000000 !important;
             padding: 12px 16px !important;
             border-radius: 8px !important;
             margin-top: 16px !important;
@@ -360,6 +360,19 @@
                 $('#eskimo-post-slider').parent().removeClass('eskimo-bg-loader');
             });
         })(jQuery);
+
+         // Set up CSRF token for all AJAX requests
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = document.querySelector('meta[name="csrf-token"]');
+            if (token) {
+                window.axios = window.axios || {};
+                window.axios.defaults = window.axios.defaults || {};
+                window.axios.defaults.headers = window.axios.defaults.headers || {};
+                window.axios.defaults.headers.common = window.axios.defaults.headers.common || {};
+                window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content');
+            }
+        });
+
     </script>
     
     <!-- POST CAROUSEL -->
