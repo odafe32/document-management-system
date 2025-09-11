@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -15,6 +16,7 @@ class UserSeeder extends Seeder
     {
         // Create Admin User
         User::create([
+            'id' => Str::uuid(),
             'name' => 'System Administrator',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('password'),
@@ -30,6 +32,7 @@ class UserSeeder extends Seeder
 
         // Create Staff Users
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Dr. John Doe',
             'email' => 'john@gmail.com',
             'password' => Hash::make('password'),
@@ -44,6 +47,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Prof. Jane Smith',
             'email' => 'jane@gmail.com',
             'password' => Hash::make('password'),
@@ -59,6 +63,7 @@ class UserSeeder extends Seeder
 
         // Create Student Users
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Alice Johnson',
             'email' => 'alice@gmail.com',
             'password' => Hash::make('password'),
@@ -75,6 +80,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Bob Wilson',
             'email' => 'bob@gmail.com',
             'password' => Hash::make('password'),
@@ -91,6 +97,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Carol Brown',
             'email' => 'carol.brown@student.nsuk.edu.ng',
             'password' => Hash::make('password123'),

@@ -1,1 +1,3 @@
-hello 
+@extends('layout.staff')
+@section('content')
+@endsection
