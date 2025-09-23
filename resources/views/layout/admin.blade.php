@@ -7,14 +7,14 @@
         <title>{{ $meta_title }}</title>
     
         <!-- Updated Meta Description -->
-        <meta name="description" content="Departmental Information Management System for managing documents, announcements, staff profiles, and student feedback in one centralized platform.">
+        <meta name="description" content="Departmental Information Management System for managing documents, announcements, admin profiles, and student feedback in one centralized platform.">
     
         <meta name="author" content="Nsuk Document Management System" />
         <meta content="Departmental Information Management System with document management and announcements" name="description" />
         <meta content="{{ $meta_title }}" property="og:title" />
-        <meta content="Departmental Information Management System for managing documents, announcements, staff profiles, and communication." property="og:description" />
+        <meta content="Departmental Information Management System for managing documents, announcements, admin profiles, and communication." property="og:description" />
         <meta content="{{ $meta_title }}" property="twitter:title" />
-        <meta content="Centralized departmental portal with document management, announcements, staff directory, and student feedback." property="twitter:description" />
+        <meta content="Centralized departmental portal with document management, announcements, admin directory, and student feedback." property="twitter:description" />
         <meta content="{{ $meta_image }}" property="og:image" />
         <meta content="{{ $meta_image }}" property="twitter:image" />
         <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -521,7 +521,7 @@
                         <div id="eskimo-sidebar-wrapper" class="d-flex align-items-start flex-column h-100 w-100">
                             <!-- LOGO -->
                             <div id="eskimo-logo-cell" class="w-100">
-                                <a class="eskimo-logo-link" href="{{ route('staff.dashboard') }}">
+                                <a class="eskimo-logo-link" href="{{ route('admin.dashboard') }}">
                                     <img src="{{ url('logo.png') }}" style="width: 100px" class="eskimo-logo" alt="logo" />
                                 </a>
                             </div>
@@ -532,11 +532,13 @@
                                 <!-- MENU -->
                                 <nav id="eskimo-main-menu" class="menu-main-menu-container">
                                     <ul class="eskimo-menu-ul">
-                                        <li><a href="{{ route('staff.dashboard') }}">Dashboard</a></li>
-                                        <li><a href="{{ route('staff.profile') }}">Profile</a></li>
-                                        <li><a href="{{ route('staff.documents') }}">My Documents</a></li>
-                                        <li><a href="{{ route('staff.announcements') }}">My Announcements</a></li>
-                                        <li><a href="{{ route('staff.feedbacks') }}">Feedbacks</a></li>
+                                        <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                                        <li><a href="">Users</a></li>
+                                        <li><a href="{{ route('admin.profile') }}">Profile</a></li>
+                                        <li><a href="{{ route('admin.documents') }}">My Documents</a></li>
+                                        
+                                        <li><a href="{{ route('admin.announcements') }}">My Announcements</a></li>
+                                        <li><a href="{{ route('admin.feedbacks') }}">Feedbacks</a></li>
                                     </ul>
                                 </nav>
                             </div>
@@ -602,7 +604,7 @@
                                                 </div>
                                             </div>
                                             <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="{{ route('staff.profile') }}">
+                                            <a class="dropdown-item" href="{{ route('admin.profile') }}">
                                                 <i class="fas fa-user"></i>
                                                 View Profile
                                             </a>
@@ -636,17 +638,17 @@
                         <!-- FOOTER WIDGET 1 -->
                         <div class="col-12 col-lg-6 mb-4 mb-lg-0">
                             <h5 class="eskimo-title-with-border"><span>About Department</span></h5>
-                            <p>Departmental Information Management System for managing documents, announcements, staff profiles, and student feedback in one centralized platform.</p>
-                            <p><a href="{{ route('staff.profile') }}" class="btn btn-default">Read More</a></p>
+                            <p>Departmental Information Management System for managing documents, announcements, admin profiles, and student feedback in one centralized platform.</p>
+                            <p><a href="{{ route('admin.profile') }}" class="btn btn-default">Read More</a></p>
                         </div>
                         <!-- FOOTER WIDGET 2 -->
                         <div class="col-12 col-lg-6">
                             <h5 class="eskimo-title-with-border"><span>Quick Links</span></h5>
                             <ul class="list-unstyled">
-                                <li><a href="{{ route('staff.dashboard') }}">Dashboard</a></li>
-                                <li><a href="{{ route('staff.documents') }}">Documents</a></li>
-                                <li><a href="{{ route('staff.announcements') }}">Announcements</a></li>
-                                <li><a href="{{ route('staff.feedbacks') }}">Feedbacks</a></li>
+                                <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                                <li><a href="{{ route('admin.documents') }}">Documents</a></li>
+                                <li><a href="{{ route('admin.announcements') }}">Announcements</a></li>
+                                <li><a href="{{ route('admin.feedbacks') }}">Feedbacks</a></li>
                             </ul>
                         </div>
                     </div>

@@ -1,1 +1,4 @@
-hello admin 
+@extends('layout.admin')
+@section('content')
+
+@endsection
