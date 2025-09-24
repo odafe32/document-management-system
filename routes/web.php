@@ -33,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::controller(AdminController::class)->group(function () {
             // Dashboard
-         Route::get('/dashboard', 'showDashboard')->name('dashboard');
+            Route::get('/dashboard', 'showDashboard')->name('dashboard');
             Route::get('/profile', 'showProfile')->name('profile');
             Route::get('/profile/edit', 'editProfile')->name('profile.edit');
             Route::post('/profile/update', 'updateProfile')->name('profile.update');
@@ -62,6 +62,15 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/feedbacks/{feedback}/reply', 'replyFeedback')->name('feedbacks.reply');
             Route::patch('/feedbacks/{feedback}/status', 'updateFeedbackStatus')->name('feedbacks.status');
             Route::get('/feedbacks/{feedback}/download', 'downloadFeedbackAttachment')->name('feedbacks.download');
+
+            // User Management Routes
+            Route::get('/users', 'showUsers')->name('users');
+            Route::get('/users/create', 'createUser')->name('users.create');
+            Route::post('/users', 'storeUser')->name('users.store');
+            Route::get('/users/{user}/edit', 'editUser')->name('users.edit');
+            Route::put('/users/{user}', 'updateUser')->name('users.update');
+            Route::delete('/users/{user}', 'destroyUser')->name('users.destroy');
+            Route::patch('/users/{user}/toggle-status', 'toggleUserStatus')->name('users.toggle-status');
         });
     });
 
@@ -106,6 +115,13 @@ Route::middleware(['auth'])->group(function () {
         Route::controller(StudentController::class)->group(function () {
             // Dashboard
             Route::get('/dashboard', 'showDashboard')->name('dashboard');
+            
+            // Student-specific routes can be added here
+            // Route::get('/profile', 'showProfile')->name('profile');
+            // Route::get('/documents', 'viewDocuments')->name('documents');
+            // Route::get('/announcements', 'viewAnnouncements')->name('announcements');
+            // Route::get('/feedback', 'createFeedback')->name('feedback.create');
+            // Route::post('/feedback', 'storeFeedback')->name('feedback.store');
         });
     });
 });

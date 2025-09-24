@@ -533,7 +533,7 @@
                                 <nav id="eskimo-main-menu" class="menu-main-menu-container">
                                     <ul class="eskimo-menu-ul">
                                         <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                        <li><a href="">Users</a></li>
+                                        <li><a href="{{ route('admin.users') }}">Users</a></li>
                                         <li><a href="{{ route('admin.profile') }}">Profile</a></li>
                                         <li><a href="{{ route('admin.documents') }}">My Documents</a></li>
                                         
