@@ -474,54 +474,52 @@ class StaffController extends Controller
         return view('staff.announcements-edit', $viewData);
     }
 
-    public function updateAnnouncement(Request $request, Announcement $announcement)
-    {
-        // Ensure user can only update their own announcements
-        if ($announcement->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
+public function updateAnnouncement(Request $request, Announcement $announcement)
+{
+    // Admin can update any announcement - no ownership check needed
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'body' => 'required|string',
+        'category' => 'required|in:general,academic,exam,timetable,memo,other',
+        'visibility' => 'required|in:public,staff,student',
+        'target_department' => 'nullable|string|max:255',
+        'expiry_date' => 'nullable|date|after:today',
+        'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
+    ]);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-            'category' => 'required|in:general,academic,exam,timetable,memo,other',
-            'visibility' => 'required|in:public,staff,student',
-            'expiry_date' => 'nullable|date|after:today',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
-        ]);
+    try {
+        $announcementData = [
+            'title' => $request->title,
+            'body' => $request->body,
+            'category' => $request->category,
+            'visibility' => $request->visibility,
+            'target_department' => $request->target_department,
+            'expiry_date' => $request->expiry_date,
+            'is_active' => $request->has('is_active'),
+        ];
 
-        try {
-            $announcementData = [
-                'title' => $request->title,
-                'body' => $request->body,
-                'category' => $request->category,
-                'visibility' => $request->visibility,
-                'expiry_date' => $request->expiry_date,
-                'is_active' => $request->has('is_active'),
-            ];
-
-            // Handle file attachment
-            if ($request->hasFile('attachment')) {
-                // Delete old attachment if exists
-                if ($announcement->attachment && Storage::disk('public')->exists($announcement->attachment)) {
-                    Storage::disk('public')->delete($announcement->attachment);
-                }
-
-                $file = $request->file('attachment');
-                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('announcements', $filename, 'public');
-                $announcementData['attachment'] = $path;
+        // Handle file attachment
+        if ($request->hasFile('attachment')) {
+            // Delete old attachment if exists
+            if ($announcement->attachment && Storage::disk('public')->exists($announcement->attachment)) {
+                Storage::disk('public')->delete($announcement->attachment);
             }
 
-            $announcement->update($announcementData);
-
-            return redirect()->route('staff.announcements')->with('success', 'Announcement updated successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('Announcement update failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to update announcement. Please try again.'])->withInput();
+            $file = $request->file('attachment');
+            $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('announcements', $filename, 'public');
+            $announcementData['attachment'] = $path;
         }
+
+        $announcement->update($announcementData);
+
+        return redirect()->route('admin.announcements')->with('success', 'Announcement updated successfully!');
+
+    } catch (\Exception $e) {
+        Log::error('Announcement update failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Failed to update announcement. Please try again.'])->withInput();
     }
+}
 
     public function destroyAnnouncement(Announcement $announcement)
     {

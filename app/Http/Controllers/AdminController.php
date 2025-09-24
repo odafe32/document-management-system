@@ -440,7 +440,6 @@ public function editAnnouncement(Announcement $announcement)
 
     return view('admin.announcements-edit', $viewData);
 }
-
 public function updateAnnouncement(Request $request, Announcement $announcement)
 {
     // Admin can update any announcement - no ownership check needed
@@ -449,6 +448,7 @@ public function updateAnnouncement(Request $request, Announcement $announcement)
         'body' => 'required|string',
         'category' => 'required|in:general,academic,exam,timetable,memo,other',
         'visibility' => 'required|in:public,staff,student',
+        'target_department' => 'nullable|string|max:255',
         'expiry_date' => 'nullable|date|after:today',
         'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
     ]);
@@ -459,6 +459,7 @@ public function updateAnnouncement(Request $request, Announcement $announcement)
             'body' => $request->body,
             'category' => $request->category,
             'visibility' => $request->visibility,
+            'target_department' => $request->target_department,
             'expiry_date' => $request->expiry_date,
             'is_active' => $request->has('is_active'),
         ];

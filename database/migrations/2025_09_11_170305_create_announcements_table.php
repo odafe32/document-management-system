@@ -26,6 +26,7 @@ return new class extends Migration
             
             // Visibility and expiry
             $table->enum('visibility', ['public', 'staff', 'student'])->default('public');
+              $table->string('target_department')->nullable();
             $table->date('expiry_date')->nullable();
             
             // Tracking

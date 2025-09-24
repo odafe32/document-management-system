@@ -114,14 +114,25 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
         Route::controller(StudentController::class)->group(function () {
             // Dashboard
-            Route::get('/dashboard', 'showDashboard')->name('dashboard');
-            
-            // Student-specific routes can be added here
-            // Route::get('/profile', 'showProfile')->name('profile');
-            // Route::get('/documents', 'viewDocuments')->name('documents');
-            // Route::get('/announcements', 'viewAnnouncements')->name('announcements');
-            // Route::get('/feedback', 'createFeedback')->name('feedback.create');
-            // Route::post('/feedback', 'storeFeedback')->name('feedback.store');
+            Route::get('/home', 'showHome')->name('home');
+            //pofile
+            Route::get('/profile', 'showProfile')->name('profile');
+            Route::get('/profile/edit', 'editProfile')->name('profile.edit');
+            Route::post('/profile/update', 'updateProfile')->name('profile.update');
+
+            //view annoncemnt
+      
+            Route::get('/documents', 'showDocuments')->name('documents');
+            // Announcement Routes
+            Route::get('/announcements', 'showAnnouncements')->name('announcements');
+            Route::get('/announcements/{announcement}', 'viewAnnouncement')->name('announcements.view');
+            Route::get('/announcements/{announcement}/download', 'downloadAnnouncementAttachment')->name('announcements.download');
+
+              //staff directory / profile
+                 Route::get('/staff-directory', 'showDirectory')->name('staff-directory');
+                 //feedback
+                 Route::get('/feedbacks', 'showFeedbacks')->name('feedbacks');
+
         });
     });
 });

@@ -22,6 +22,7 @@ class Announcement extends Model
         'category',
         'attachment',
         'visibility',
+        'target_department', // New field for department targeting
         'expiry_date',
         'views',
         'is_active',
@@ -82,6 +83,18 @@ class Announcement extends Model
     }
 
     /**
+     * Scope a query by target department.
+     */
+    public function scopeByDepartment($query, $department)
+    {
+        return $query->where(function($q) use ($department) {
+            $q->where('target_department', $department)
+              ->orWhereNull('target_department')
+              ->orWhere('target_department', '');
+        });
+    }
+
+    /**
      * Scope a query to search announcements.
      */
     public function scopeSearch($query, $search)
@@ -89,6 +102,17 @@ class Announcement extends Model
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
               ->orWhere('body', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * Scope for student-visible announcements.
+     */
+    public function scopeStudentVisible($query)
+    {
+        return $query->where(function($q) {
+            $q->where('visibility', 'student')
+              ->orWhere('visibility', 'public');
         });
     }
 
@@ -106,6 +130,14 @@ class Announcement extends Model
     public function getVisibilityDisplayAttribute()
     {
         return ucfirst($this->visibility);
+    }
+
+    /**
+     * Get the target department display name.
+     */
+    public function getTargetDepartmentDisplayAttribute()
+    {
+        return $this->target_department ? ucfirst($this->target_department) : 'All Departments';
     }
 
     /**
@@ -170,5 +202,21 @@ class Announcement extends Model
         }
         
         return 'Active';
+    }
+
+    /**
+     * Check if announcement is for a specific department.
+     */
+    public function getIsDepartmentSpecificAttribute()
+    {
+        return !empty($this->target_department);
+    }
+
+    /**
+     * Check if announcement is general (for all departments).
+     */
+    public function getIsGeneralAttribute()
+    {
+        return empty($this->target_department);
     }
 }
