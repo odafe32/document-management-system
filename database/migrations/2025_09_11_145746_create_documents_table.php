@@ -24,8 +24,9 @@ return new class extends Migration
                 ->default('other'); // Document type
             $table->string('file_path'); // Storage path
             $table->enum('visibility', ['public', 'private']) // Who can view
-                ->default('public');
             
+                ->default('public');
+              $table->string('target_department')->nullable();
             // Tracking
             $table->unsignedBigInteger('downloads')->default(0); // Track downloads
             

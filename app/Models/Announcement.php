@@ -83,14 +83,23 @@ class Announcement extends Model
     }
 
     /**
-     * Scope a query by target department.
+     * Scope a query by target department - improved logic.
      */
     public function scopeByDepartment($query, $department)
     {
         return $query->where(function($q) use ($department) {
-            $q->where('target_department', $department)
-              ->orWhereNull('target_department')
-              ->orWhere('target_department', '');
+            // Show announcements that:
+            // 1. Have no target department (general announcements)
+            // 2. Have empty target department (general announcements)
+            // 3. Target the specific department (case-insensitive)
+            $q->whereNull('target_department')
+              ->orWhere('target_department', '')
+              ->orWhere('target_department', $department);
+              
+            // Also handle case-insensitive matching if department is provided
+            if ($department) {
+                $q->orWhereRaw('LOWER(TRIM(target_department)) = ?', [strtolower(trim($department))]);
+            }
         });
     }
 
@@ -218,5 +227,38 @@ class Announcement extends Model
     public function getIsGeneralAttribute()
     {
         return empty($this->target_department);
+    }
+
+    /**
+     * Check if a user can access this announcement
+     */
+    public function canBeAccessedByStudent(User $user): bool
+    {
+        // Check visibility
+        if (!in_array($this->visibility, ['student', 'public'])) {
+            return false;
+        }
+
+        // Check if announcement is active
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Check if announcement is expired
+        if ($this->is_expired) {
+            return false;
+        }
+
+        // Check department access
+        if (!empty($this->target_department)) {
+            $targetDept = strtolower(trim($this->target_department));
+            $userDept = strtolower(trim($user->department ?? ''));
+            
+            if ($targetDept !== $userDept) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

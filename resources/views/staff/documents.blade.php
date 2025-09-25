@@ -865,6 +865,28 @@
             </div>
             
             <div class="form-group">
+    <label class="form-label">
+        <i class="fas fa-building text-gray-400"></i>
+        Target Department (Optional)
+    </label>
+    <select name="target_department" class="form-control @error('target_department') error @enderror">
+        <option value="">All Departments</option>
+        <option value="computer science" {{ old('target_department', $announcement->target_department ?? '') == 'computer science' ? 'selected' : '' }}>Computer Science</option>
+        <option value="mathematics" {{ old('target_department', $announcement->target_department ?? '') == 'mathematics' ? 'selected' : '' }}>Mathematics</option>
+        <option value="physics" {{ old('target_department', $announcement->target_department ?? '') == 'physics' ? 'selected' : '' }}>Physics</option>
+        <option value="chemistry" {{ old('target_department', $announcement->target_department ?? '') == 'chemistry' ? 'selected' : '' }}>Chemistry</option>
+        <option value="biology" {{ old('target_department', $announcement->target_department ?? '') == 'biology' ? 'selected' : '' }}>Biology</option>
+        <option value="english" {{ old('target_department', $announcement->target_department ?? '') == 'english' ? 'selected' : '' }}>English</option>
+        <option value="history" {{ old('target_department', $announcement->target_department ?? '') == 'history' ? 'selected' : '' }}>History</option>
+        <option value="economics" {{ old('target_department', $announcement->target_department ?? '') == 'economics' ? 'selected' : '' }}>Economics</option>
+        <!-- Add more departments as needed -->
+    </select>
+    @error('target_department')
+        <p class="text-error">{{ $message }}</p>
+    @enderror
+    <p class="help-text">Leave empty to show announcement to all departments, or select a specific department</p>
+</div>
+            <div class="form-group">
                 <label class="form-label">File *</label>
                 <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
                     <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #6b7280; margin-bottom: 0.5rem;"></i>

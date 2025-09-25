@@ -496,6 +496,308 @@
                     min-width: 200px;
                 }
             }
+            /* Global Bigger Select and Option Styles */
+
+/* Base select styling - makes all selects bigger */
+select, 
+.form-control select,
+select.form-control {
+    /* Size and spacing */
+    padding: 1rem 1.25rem !important;
+    font-size: 1.125rem !important; /* 18px */
+    line-height: 1.5 !important;
+    min-height: 3.5rem !important; /* 56px */
+    
+    /* Appearance */
+    border: 2px solid #d1d5db !important;
+    border-radius: 12px !important;
+    background-color: white !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    
+    /* Custom dropdown arrow */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 1rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.25rem 1.25rem !important;
+    padding-right: 3rem !important;
+    
+    /* Remove default appearance */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    
+    /* Transitions */
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+/* Focus state for selects */
+select:focus,
+.form-control select:focus,
+select.form-control:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    background-color: #fefefe !important;
+}
+
+/* Hover state for selects */
+select:hover,
+.form-control select:hover,
+select.form-control:hover {
+    border-color: #9ca3af !important;
+    background-color: #fefefe !important;
+}
+
+/* Disabled state for selects */
+select:disabled,
+.form-control select:disabled,
+select.form-control:disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* Option styling - makes options bigger */
+select option,
+.form-control select option,
+select.form-control option {
+    padding: 0.875rem 1rem !important;
+    font-size: 1.125rem !important; /* 18px */
+    line-height: 1.6 !important;
+    color: #374151 !important;
+    background-color: white !important;
+    font-weight: 500 !important;
+    min-height: 3rem !important; /* 48px */
+}
+
+/* Option hover/selected states */
+select option:hover,
+select option:focus,
+select option:checked,
+.form-control select option:hover,
+.form-control select option:focus,
+.form-control select option:checked,
+select.form-control option:hover,
+select.form-control option:focus,
+select.form-control option:checked {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+/* Multiple select styling */
+select[multiple],
+.form-control select[multiple],
+select.form-control[multiple] {
+    min-height: 8rem !important; /* 128px */
+    padding: 0.5rem !important;
+    background-image: none !important;
+    padding-right: 1.25rem !important;
+}
+
+select[multiple] option,
+.form-control select[multiple] option,
+select.form-control[multiple] option {
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 0.25rem !important;
+    border-radius: 6px !important;
+}
+
+/* Specific styling for different select contexts */
+
+/* Filter selects (smaller but still bigger than default) */
+.filter-select,
+select.filter-select {
+    min-height: 3rem !important; /* 48px */
+    font-size: 1rem !important; /* 16px */
+    padding: 0.75rem 1rem !important;
+    padding-right: 2.5rem !important;
+}
+
+.filter-select option,
+select.filter-select option {
+    font-size: 1rem !important; /* 16px */
+    padding: 0.75rem 1rem !important;
+    min-height: 2.5rem !important; /* 40px */
+}
+
+/* Search box styling to match */
+.search-box,
+input.search-box {
+    padding: 1rem 1.25rem !important;
+    font-size: 1.125rem !important; /* 18px */
+    min-height: 3.5rem !important; /* 56px */
+    border: 2px solid #d1d5db !important;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+}
+
+.search-box:focus,
+input.search-box:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    select, 
+    .form-control select,
+    select.form-control {
+        font-size: 1.25rem !important; /* 20px - bigger on mobile */
+        min-height: 4rem !important; /* 64px - taller on mobile */
+        padding: 1.25rem 1.5rem !important;
+        padding-right: 3.5rem !important;
+        background-size: 1.5rem 1.5rem !important;
+        background-position: right 1.25rem center !important;
+    }
+    
+    select option,
+    .form-control select option,
+    select.form-control option {
+        font-size: 1.25rem !important; /* 20px */
+        padding: 1rem 1.25rem !important;
+        min-height: 3.5rem !important; /* 56px */
+    }
+    
+    .search-box,
+    input.search-box {
+        font-size: 1.25rem !important; /* 20px */
+        min-height: 4rem !important; /* 64px */
+        padding: 1.25rem 1.5rem !important;
+    }
+}
+
+/* Extra large screens - even bigger */
+@media (min-width: 1200px) {
+    select, 
+    .form-control select,
+    select.form-control {
+        font-size: 1.25rem !important; /* 20px */
+        min-height: 4rem !important; /* 64px */
+        padding: 1.25rem 1.5rem !important;
+        padding-right: 3.5rem !important;
+    }
+    
+    select option,
+    .form-control select option,
+    select.form-control option {
+        font-size: 1.25rem !important; /* 20px */
+        padding: 1rem 1.25rem !important;
+        min-height: 3.5rem !important; /* 56px */
+    }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+    select, 
+    .form-control select,
+    select.form-control {
+        background-color: #1f2937 !important;
+        color: #f9fafb !important;
+        border-color: #4b5563 !important;
+    }
+    
+    select option,
+    .form-control select option,
+    select.form-control option {
+        background-color: #1f2937 !important;
+        color: #f9fafb !important;
+    }
+    
+    select option:hover,
+    select option:focus,
+    select option:checked {
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    select, 
+    .form-control select,
+    select.form-control {
+        border-width: 3px !important;
+        font-weight: 600 !important;
+    }
+    
+    select option,
+    .form-control select option,
+    select.form-control option {
+        font-weight: 600 !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    select, 
+    .form-control select,
+    select.form-control {
+        border: 2px solid #000 !important;
+        background: white !important;
+        color: black !important;
+        font-size: 12pt !important;
+    }
+}
+
+/* Custom select variants */
+
+/* Large select variant */
+.select-lg,
+select.select-lg {
+    font-size: 1.375rem !important; /* 22px */
+    min-height: 4.5rem !important; /* 72px */
+    padding: 1.5rem 1.75rem !important;
+    padding-right: 4rem !important;
+    background-size: 1.5rem 1.5rem !important;
+    background-position: right 1.5rem center !important;
+}
+
+.select-lg option,
+select.select-lg option {
+    font-size: 1.375rem !important; /* 22px */
+    padding: 1.25rem 1.5rem !important;
+    min-height: 4rem !important; /* 64px */
+}
+
+/* Extra large select variant */
+.select-xl,
+select.select-xl {
+    font-size: 1.5rem !important; /* 24px */
+    min-height: 5rem !important; /* 80px */
+    padding: 1.75rem 2rem !important;
+    padding-right: 4.5rem !important;
+    background-size: 1.75rem 1.75rem !important;
+    background-position: right 1.75rem center !important;
+}
+
+.select-xl option,
+select.select-xl option {
+    font-size: 1.5rem !important; /* 24px */
+    padding: 1.5rem 1.75rem !important;
+    min-height: 4.5rem !important; /* 72px */
+}
+
+/* Compact select variant (still bigger than default) */
+.select-compact,
+select.select-compact {
+    font-size: 1rem !important; /* 16px */
+    min-height: 2.75rem !important; /* 44px */
+    padding: 0.625rem 1rem !important;
+    padding-right: 2.25rem !important;
+    background-size: 1rem 1rem !important;
+    background-position: right 0.75rem center !important;
+}
+
+.select-compact option,
+select.select-compact option {
+    font-size: 1rem !important; /* 16px */
+    padding: 0.625rem 0.875rem !important;
+    min-height: 2.25rem !important; /* 36px */
+}
     
         </style>
     
@@ -537,7 +839,7 @@
                                         <li><a href="{{ route('student.announcements') }}">View Announcements</a></li>
 
                                         <li><a href="{{ route('student.documents') }}">Access Documents /Resources</a></li>
-                                        <li><a href="{{ route('student.staff-directory') }}"> Staff Directory /Profile</a></li>
+                                      
                                         <li><a href="{{ route('student.feedbacks') }}">Feedbacks</a></li>
                                     </ul>
                                 </nav>
@@ -645,10 +947,13 @@
                         <div class="col-12 col-lg-6">
                             <h5 class="eskimo-title-with-border"><span>Quick Links</span></h5>
                             <ul class="list-unstyled">
-                                <li><a href="{{ route('staff.dashboard') }}">Dashboard</a></li>
-                                <li><a href="{{ route('staff.documents') }}">Documents</a></li>
-                                <li><a href="{{ route('staff.announcements') }}">Announcements</a></li>
-                                <li><a href="{{ route('staff.feedbacks') }}">Feedbacks</a></li>
+                                  <li><a href="{{ route('student.home') }}">Home</a></li>
+                                        <li><a href="{{ route('student.profile') }}">Profile</a></li>
+                                        <li><a href="{{ route('student.announcements') }}">View Announcements</a></li>
+
+                                        <li><a href="{{ route('student.documents') }}">Access Documents /Resources</a></li>
+                                      
+                                        <li><a href="{{ route('student.feedbacks') }}">Feedbacks</a></li>
                             </ul>
                         </div>
                     </div>

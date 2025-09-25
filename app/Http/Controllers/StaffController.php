@@ -216,38 +216,81 @@ class StaffController extends Controller
 
         return view('staff.documents', $viewData);
     }
+public function storeDocument(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string|max:1000',
+        'category' => 'required|in:lecture,timetable,memo,other',
+        'visibility' => 'required|in:public,private',
+        'target_department' => 'nullable|string|max:255',
+        'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,gif|max:10240', // 10MB max
+    ]);
 
-    public function storeDocument(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'category' => 'required|in:lecture,timetable,memo,other',
-            'visibility' => 'required|in:public,private',
-            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,gif|max:10240', // 10MB max
+    try {
+        // Store the file
+        $filePath = $request->file('file')->store('documents', 'public');
+
+        // Create document record
+        Document::create([
+            'user_id' => Auth::id(),
+            'title' => $request->title,
+            'description' => $request->description,
+            'category' => $request->category,
+            'file_path' => $filePath,
+            'visibility' => $request->visibility,
+            'target_department' => $request->target_department,
         ]);
 
-        try {
-            // Store the file
-            $filePath = $request->file('file')->store('documents', 'public');
+        return redirect()->route('admin.documents')->with('success', 'Document uploaded successfully!');
 
-            // Create document record
-            Document::create([
-                'user_id' => Auth::id(),
-                'title' => $request->title,
-                'description' => $request->description,
-                'category' => $request->category,
-                'file_path' => $filePath,
-                'visibility' => $request->visibility,
-            ]);
-
-            return redirect()->route('staff.documents')->with('success', 'Document uploaded successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('Document upload failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to upload document. Please try again.']);
-        }
+    } catch (\Exception $e) {
+        Log::error('Document upload failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Failed to upload document. Please try again.']);
     }
+}
+
+public function updateDocument(Request $request, Document $document)
+{
+    // Admin can update any document - no ownership check needed
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string|max:1000',
+        'category' => 'required|in:lecture,timetable,memo,other',
+        'visibility' => 'required|in:public,private',
+        'target_department' => 'nullable|string|max:255',
+        'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,gif|max:10240', // 10MB max
+    ]);
+
+    try {
+        // Handle file replacement
+        if ($request->hasFile('file')) {
+            // Delete old file
+            if (Storage::disk('public')->exists($document->file_path)) {
+                Storage::disk('public')->delete($document->file_path);
+            }
+
+            // Store new file
+            $filePath = $request->file('file')->store('documents', 'public');
+            $document->file_path = $filePath;
+        }
+
+        // Update document details
+        $document->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'category' => $request->category,
+            'visibility' => $request->visibility,
+            'target_department' => $request->target_department,
+        ]);
+
+        return redirect()->route('admin.documents')->with('success', 'Document updated successfully!');
+
+    } catch (\Exception $e) {
+        Log::error('Document update failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Failed to update document. Please try again.']);
+    }
+}
 
     public function editDocument(Document $document)
     {
@@ -264,50 +307,6 @@ class StaffController extends Controller
         ];
 
         return view('staff.documents-edit', $viewData);
-    }
-
-    public function updateDocument(Request $request, Document $document)
-    {
-        // Check if user owns the document
-        if ($document->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access to document.');
-        }
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'category' => 'required|in:lecture,timetable,memo,other',
-            'visibility' => 'required|in:public,private',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,gif|max:10240', // 10MB max
-        ]);
-
-        try {
-            // Handle file replacement
-            if ($request->hasFile('file')) {
-                // Delete old file
-                if (Storage::disk('public')->exists($document->file_path)) {
-                    Storage::disk('public')->delete($document->file_path);
-                }
-
-                // Store new file
-                $filePath = $request->file('file')->store('documents', 'public');
-                $document->file_path = $filePath;
-            }
-
-            // Update document details
-            $document->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'category' => $request->category,
-                'visibility' => $request->visibility,
-            ]);
-
-            return redirect()->route('staff.documents')->with('success', 'Document updated successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('Document update failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to update document. Please try again.']);
-        }
     }
 
     public function destroyDocument(Document $document)

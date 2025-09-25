@@ -17,16 +17,39 @@ use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
-    public function showHome()
-    {
-        $viewData = [
-           'meta_title'=> 'Student HomePage | Nsuk Document Management System',
-           'meta_desc'=> 'Departmental Information Management System with document management and announcements',
-           'meta_image'=> url('logo.png'),
-        ];
+  public function showHome()
+{
+    $user = Auth::user();
+    
+    // Get recent announcements for dashboard
+    $recentAnnouncements = Announcement::with('user')
+        ->active()
+        ->notExpired()
+        ->studentVisible()
+        ->byDepartment($user->department)
+        ->latest()
+        ->take(5)
+        ->get();
 
-        return view('student.home', $viewData);
-    }
+    // Get recent documents for dashboard
+    $recentDocuments = Document::with('user')
+        ->studentVisible()
+        ->byDepartment($user->department)
+        ->latest()
+        ->take(5)
+        ->get();
+
+    $viewData = [
+       'meta_title'=> 'Student Dashboard | Nsuk Document Management System',
+       'meta_desc'=> 'Departmental Information Management System with document management and announcements',
+       'meta_image'=> url('logo.png'),
+       'recentAnnouncements' => $recentAnnouncements,
+       'recentDocuments' => $recentDocuments,
+       'user' => $user,
+    ];
+
+    return view('student.home', $viewData);
+}
 
     
     public function showProfile()
@@ -125,6 +148,89 @@ class StudentController extends Controller
         }
     }
 
+    public function showDocuments(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Build query - Students see only public documents relevant to their department
+        $query = Document::with('user')
+            ->studentVisible() // Only public documents
+            ->byDepartment($user->department) // Department-specific filtering
+            ->latest();
+
+        // Apply filters
+        if ($request->filled('category')) {
+            $query->byCategory($request->category);
+        }
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        $documents = $query->paginate(10);
+
+        // Statistics - Only for documents visible to this student
+        $baseQuery = Document::studentVisible()->byDepartment($user->department);
+
+        $stats = [
+            'total' => $baseQuery->count(),
+            'department' => $baseQuery->where('target_department', $user->department)->count(),
+            'general' => $baseQuery->where(function($q) {
+                $q->whereNull('target_department')
+                  ->orWhere('target_department', '');
+            })->count(),
+            'downloads' => $baseQuery->sum('downloads'),
+        ];
+
+        $viewData = [
+            'meta_title' => 'Department Documents | Nsuk Document Management System',
+            'meta_desc' => 'Access department documents and resources',
+            'meta_image' => url('logo.png'),
+            'pageTitle' => ucfirst($user->department) . ' Department Documents',
+            'documents' => $documents,
+            'stats' => $stats,
+            'currentCategory' => $request->category,
+            'currentSearch' => $request->search,
+            'userDepartment' => $user->department,
+        ];
+
+        return view('student.documents', $viewData);
+    }
+
+    public function downloadDocument(Document $document)
+    {
+        $user = Auth::user();
+        
+        // Check if student can access this document
+        if (!$document->canBeAccessedByStudent($user)) {
+            abort(403, 'You do not have permission to access this document.');
+        }
+
+        // Check if file exists
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'File not found.');
+        }
+
+        // Log the download for analytics
+        Log::info('Student downloaded document', [
+            'student_id' => $user->id,
+            'student_name' => $user->name,
+            'document_id' => $document->id,
+            'document_title' => $document->title,
+            'file_name' => $document->original_filename,
+        ]);
+
+        // Increment download count (only once per session to avoid inflating numbers)
+        $sessionKey = 'downloaded_document_' . $document->id;
+        if (!Session::has($sessionKey)) {
+            $document->incrementDownloads();
+            Session::put($sessionKey, true);
+        }
+
+        // Return file download
+        return Storage::disk('public')->download($document->file_path, $document->title . '.' . $document->file_extension);
+    }
+
     public function showAnnouncements(Request $request)
     {
         $user = Auth::user();
@@ -133,17 +239,8 @@ class StudentController extends Controller
         $query = Announcement::with('user')
             ->active() // Only active announcements
             ->notExpired() // Only non-expired announcements
-            ->where(function($q) {
-                // Show announcements visible to students or public
-                $q->where('visibility', 'student')
-                  ->orWhere('visibility', 'public');
-            })
-            ->where(function($q) use ($user) {
-                // Show announcements for student's department or general announcements
-                $q->where('target_department', $user->department)
-                  ->orWhereNull('target_department') // General announcements for all departments
-                  ->orWhere('target_department', ''); // Empty department means all departments
-            })
+            ->studentVisible() // Only student/public visible announcements
+            ->byDepartment($user->department) // Department-specific filtering
             ->latest();
 
         // Apply filters
@@ -157,44 +254,21 @@ class StudentController extends Controller
 
         $announcements = $query->paginate(10);
 
-        // Increment views for announcements being viewed
-        foreach ($announcements as $announcement) {
-            $announcement->incrementViews();
-        }
-
+        // Don't increment views here - only increment when viewing individual announcement
+        
         // Statistics - Only for announcements visible to this student
+        $baseQuery = Announcement::active()
+            ->notExpired()
+            ->studentVisible()
+            ->byDepartment($user->department);
+
         $stats = [
-            'total' => Announcement::active()
-                ->notExpired()
-                ->where(function($q) {
-                    $q->where('visibility', 'student')
-                      ->orWhere('visibility', 'public');
-                })
-                ->where(function($q) use ($user) {
-                    $q->where('target_department', $user->department)
-                      ->orWhereNull('target_department')
-                      ->orWhere('target_department', '');
-                })
-                ->count(),
-            'department' => Announcement::active()
-                ->notExpired()
-                ->where(function($q) {
-                    $q->where('visibility', 'student')
-                      ->orWhere('visibility', 'public');
-                })
-                ->where('target_department', $user->department)
-                ->count(),
-            'general' => Announcement::active()
-                ->notExpired()
-                ->where(function($q) {
-                    $q->where('visibility', 'student')
-                      ->orWhere('visibility', 'public');
-                })
-                ->where(function($q) {
-                    $q->whereNull('target_department')
-                      ->orWhere('target_department', '');
-                })
-                ->count(),
+            'total' => $baseQuery->count(),
+            'department' => $baseQuery->where('target_department', $user->department)->count(),
+            'general' => $baseQuery->where(function($q) {
+                $q->whereNull('target_department')
+                  ->orWhere('target_department', '');
+            })->count(),
         ];
 
         $viewData = [
@@ -216,20 +290,50 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         
-        // Check if student can view this announcement
-        $canView = ($announcement->visibility === 'student' || $announcement->visibility === 'public') &&
-                   $announcement->is_active &&
-                   !$announcement->is_expired &&
-                   ($announcement->target_department === $user->department || 
-                    $announcement->target_department === null || 
-                    $announcement->target_department === '');
+        // Load the user relationship
+        $announcement->load('user');
+        
+        // Debug information - Log the access attempt
+        Log::info('Student attempting to view announcement', [
+            'student_id' => $user->id,
+            'student_name' => $user->name,
+            'student_department' => $user->department,
+            'announcement_id' => $announcement->id,
+            'announcement_title' => $announcement->title,
+            'announcement_visibility' => $announcement->visibility,
+            'announcement_target_department' => $announcement->target_department,
+            'announcement_is_active' => $announcement->is_active,
+            'announcement_expiry_date' => $announcement->expiry_date,
+            'announcement_is_expired' => $announcement->is_expired,
+        ]);
+        
+        // Check if student can view this announcement with detailed debugging
+        $canView = $this->canStudentAccessAnnouncement($announcement, $user);
         
         if (!$canView) {
+            // Log the specific reason for denial
+            $reasons = $this->getAccessDenialReasons($announcement, $user);
+            Log::warning('Student access denied to announcement', [
+                'student_id' => $user->id,
+                'announcement_id' => $announcement->id,
+                'denial_reasons' => $reasons,
+            ]);
+            
+            // Show detailed error message in development
+            if (config('app.debug')) {
+                $errorMessage = 'Access denied. Reasons: ' . implode(', ', $reasons);
+                abort(403, $errorMessage);
+            }
+            
             abort(403, 'You do not have permission to view this announcement.');
         }
 
-        // Increment views
-        $announcement->incrementViews();
+        // Increment views (only once per session to avoid inflating numbers)
+        $sessionKey = 'viewed_announcement_' . $announcement->id;
+        if (!Session::has($sessionKey)) {
+            $announcement->incrementViews();
+            Session::put($sessionKey, true);
+        }
 
         $viewData = [
             'meta_title' => $announcement->title . ' | Nsuk Document Management System',
@@ -246,12 +350,7 @@ class StudentController extends Controller
         $user = Auth::user();
         
         // Check if student can access this announcement
-        $canAccess = ($announcement->visibility === 'student' || $announcement->visibility === 'public') &&
-                     $announcement->is_active &&
-                     !$announcement->is_expired &&
-                     ($announcement->target_department === $user->department || 
-                      $announcement->target_department === null || 
-                      $announcement->target_department === '');
+        $canAccess = $this->canStudentAccessAnnouncement($announcement, $user);
         
         if (!$canAccess) {
             abort(403, 'You do not have permission to access this attachment.');
@@ -261,6 +360,271 @@ class StudentController extends Controller
             abort(404, 'Attachment not found.');
         }
 
+        // Log the download for analytics (optional)
+        Log::info('Student downloaded announcement attachment', [
+            'student_id' => $user->id,
+            'student_name' => $user->name,
+            'announcement_id' => $announcement->id,
+            'announcement_title' => $announcement->title,
+            'attachment' => $announcement->attachment_filename,
+        ]);
+
         return Storage::disk('public')->download($announcement->attachment, $announcement->attachment_filename);
     }
+
+    /**
+     * Check if a student can access a specific announcement
+     */
+    private function canStudentAccessAnnouncement(Announcement $announcement, User $user): bool
+    {
+        // Check visibility - must be student or public
+        if (!in_array($announcement->visibility, ['student', 'public'])) {
+            return false;
+        }
+
+        // Check if announcement is active
+        if (!$announcement->is_active) {
+            return false;
+        }
+
+        // Check if announcement is expired
+        if ($announcement->expiry_date && $announcement->expiry_date->isPast()) {
+            return false;
+        }
+
+        // Check department access - more flexible logic
+        if (!empty($announcement->target_department)) {
+            // If target_department is set, check if it matches user's department
+            // Make comparison case-insensitive and handle potential whitespace
+            $targetDept = strtolower(trim($announcement->target_department));
+            $userDept = strtolower(trim($user->department ?? ''));
+            
+            if ($targetDept !== $userDept) {
+                return false;
+            }
+        }
+        // If target_department is null or empty, it's a general announcement - allow access
+
+        return true;
+    }
+
+    /**
+     * Get detailed reasons why access was denied (for debugging)
+     */
+    private function getAccessDenialReasons(Announcement $announcement, User $user): array
+    {
+        $reasons = [];
+
+        // Check visibility
+        if (!in_array($announcement->visibility, ['student', 'public'])) {
+            $reasons[] = "Visibility is '{$announcement->visibility}' (must be 'student' or 'public')";
+        }
+
+        // Check if announcement is active
+        if (!$announcement->is_active) {
+            $reasons[] = "Announcement is not active";
+        }
+
+        // Check if announcement is expired
+        if ($announcement->expiry_date && $announcement->expiry_date->isPast()) {
+            $reasons[] = "Announcement expired on {$announcement->expiry_date->format('Y-m-d')}";
+        }
+
+        // Check department access
+        if (!empty($announcement->target_department)) {
+            $targetDept = strtolower(trim($announcement->target_department));
+            $userDept = strtolower(trim($user->department ?? ''));
+            
+            if ($targetDept !== $userDept) {
+                $reasons[] = "Department mismatch: announcement targets '{$announcement->target_department}', user is in '{$user->department}'";
+            }
+        }
+
+        return $reasons;
+    }
+
+    /**
+     * Get documents for student dashboard
+     */
+    public function getDashboardDocuments()
+    {
+        $user = Auth::user();
+        
+        return Document::with('user')
+            ->studentVisible()
+            ->byDepartment($user->department)
+            ->latest()
+            ->take(3)
+            ->get();
+    }
+
+    /**
+     * Search documents (AJAX endpoint)
+     */
+    public function searchDocuments(Request $request)
+    {
+        $user = Auth::user();
+        $query = $request->get('q', '');
+        
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $documents = Document::with('user')
+            ->studentVisible()
+            ->byDepartment($user->department)
+            ->search($query)
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($document) {
+                return [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'description' => Str::limit($document->description, 100),
+                    'category' => $document->category_display,
+                    'file_size' => $document->file_size,
+                    'downloads' => $document->downloads,
+                    'url' => route('student.documents.download', $document),
+                ];
+            });
+
+        return response()->json($documents);
+    }
+
+    // Add these methods to your StudentController class
+
+public function showFeedbacks(Request $request)
+{
+    $user = Auth::user();
+    
+    // Build query for student's feedbacks
+    $query = Feedback::with(['admin', 'staff'])
+        ->where('user_id', $user->id)
+        ->latest();
+
+    // Apply filters
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('priority')) {
+        $query->byPriority($request->priority);
+    }
+
+    if ($request->filled('search')) {
+        $query->search($request->search);
+    }
+
+    $feedbacks = $query->paginate(10);
+
+    // Statistics for student's feedbacks
+    $stats = [
+        'total' => Feedback::where('user_id', $user->id)->count(),
+        'pending' => Feedback::where('user_id', $user->id)->pending()->count(),
+        'in_review' => Feedback::where('user_id', $user->id)->inReview()->count(),
+        'resolved' => Feedback::where('user_id', $user->id)->resolved()->count(),
+    ];
+
+    $viewData = [
+        'meta_title' => 'My Feedbacks | Nsuk Document Management System',
+        'meta_desc' => 'View and track your submitted feedbacks and responses',
+        'meta_image' => url('logo.png'),
+        'pageTitle' => 'My Feedbacks',
+        'feedbacks' => $feedbacks,
+        'stats' => $stats,
+        'currentStatus' => $request->status,
+        'currentPriority' => $request->priority,
+        'currentSearch' => $request->search,
+    ];
+
+    return view('student.feedbacks', $viewData);
+}
+
+public function createFeedback()
+{
+    $viewData = [
+        'meta_title' => 'Submit Feedback | Nsuk Document Management System',
+        'meta_desc' => 'Submit your feedback, suggestions, or report issues',
+        'meta_image' => url('logo.png'),
+        'pageTitle' => 'Submit New Feedback',
+    ];
+
+    return view('student.feedback-create', $viewData);
+}
+
+public function storeFeedback(Request $request)
+{
+    $request->validate([
+        'subject' => 'required|string|max:255',
+        'message' => 'required|string|max:2000',
+        'priority' => 'required|in:1,2,3',
+        'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif|max:5120', // 5MB max
+    ]);
+
+    try {
+        $feedbackData = [
+            'user_id' => Auth::id(),
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'priority' => $request->priority,
+            'status' => 'pending',
+            'is_read' => false,
+        ];
+
+        // Handle file attachment
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('feedbacks', $filename, 'public');
+            $feedbackData['attachment'] = $path;
+        }
+
+        Feedback::create($feedbackData);
+
+        return redirect()->route('student.feedbacks')->with('success', 'Feedback submitted successfully! We will review it and get back to you soon.');
+
+    } catch (\Exception $e) {
+        Log::error('Feedback submission failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Failed to submit feedback. Please try again.'])->withInput();
+    }
+}
+
+public function viewFeedback(Feedback $feedback)
+{
+    $user = Auth::user();
+    
+    // Ensure the feedback belongs to the current student
+    if ($feedback->user_id !== $user->id) {
+        abort(403, 'You do not have permission to view this feedback.');
+    }
+
+    // Load relationships
+    $feedback->load(['admin', 'staff']);
+
+    $viewData = [
+        'meta_title' => $feedback->subject . ' | Nsuk Document Management System',
+        'meta_desc' => 'View feedback details and response',
+        'meta_image' => url('logo.png'),
+        'feedback' => $feedback,
+    ];
+
+    return view('student.feedback-detail', $viewData);
+}
+
+public function downloadFeedbackAttachment(Feedback $feedback)
+{
+    $user = Auth::user();
+    
+    // Ensure the feedback belongs to the current student
+    if ($feedback->user_id !== $user->id) {
+        abort(403, 'You do not have permission to access this attachment.');
+    }
+
+    if (!$feedback->attachment || !Storage::disk('public')->exists($feedback->attachment)) {
+        abort(404, 'Attachment not found.');
+    }
+
+    return Storage::disk('public')->download($feedback->attachment, $feedback->attachment_filename);
+}
 }

@@ -114,25 +114,30 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
         Route::controller(StudentController::class)->group(function () {
             // Dashboard
-            Route::get('/home', 'showHome')->name('home');
-            //pofile
+            Route::get('/dashboard', 'showHome')->name('home');
             Route::get('/profile', 'showProfile')->name('profile');
             Route::get('/profile/edit', 'editProfile')->name('profile.edit');
             Route::post('/profile/update', 'updateProfile')->name('profile.update');
-
-            //view annoncemnt
-      
+            
+            // Document routes
             Route::get('/documents', 'showDocuments')->name('documents');
-            // Announcement Routes
+            Route::get('/documents/{document}/download', 'downloadDocument')->name('documents.download');
+            
+            // Announcement routes
             Route::get('/announcements', 'showAnnouncements')->name('announcements');
             Route::get('/announcements/{announcement}', 'viewAnnouncement')->name('announcements.view');
             Route::get('/announcements/{announcement}/download', 'downloadAnnouncementAttachment')->name('announcements.download');
-
-              //staff directory / profile
-                 Route::get('/staff-directory', 'showDirectory')->name('staff-directory');
-                 //feedback
-                 Route::get('/feedbacks', 'showFeedbacks')->name('feedbacks');
-
+            
+            // Staff directory routes
+            Route::get('/staff-directory', 'showDirectory')->name('staff-directory');
+            Route::get('/staff-directory/{staff}', 'showStaffProfile')->name('staff-profile');
+            
+            // Feedback routes - NEW ROUTES
+            Route::get('/feedbacks', 'showFeedbacks')->name('feedbacks');
+            Route::get('/feedbacks/create', 'createFeedback')->name('feedbacks.create');
+            Route::post('/feedbacks', 'storeFeedback')->name('feedbacks.store');
+            Route::get('/feedbacks/{feedback}', 'viewFeedback')->name('feedbacks.view');
+            Route::get('/feedbacks/{feedback}/download', 'downloadFeedbackAttachment')->name('feedbacks.download');
         });
     });
 });

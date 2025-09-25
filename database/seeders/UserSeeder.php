@@ -102,13 +102,14 @@ class UserSeeder extends Seeder
             'email' => 'carol.brown@student.nsuk.edu.ng',
             'password' => Hash::make('password123'),
             'role' => 'student',
-            'matric_number' => 'NSUK/2023/CS/003',
+            'matric_number' => '02200470375',
             'phone' => '+2348012345683',
             'gender' => 'female',
             'date_of_birth' => '2003-01-10',
             'department' => 'Computer Science',
             'faculty' => 'Science',
             'level' => '100',
+
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
