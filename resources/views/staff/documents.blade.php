@@ -583,16 +583,16 @@
         .content-layout {
             grid-template-columns: 1fr;
         }
-        
+
         .stats-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .document-item {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .document-actions {
             width: 100%;
             justify-content: flex-end;
@@ -610,7 +610,7 @@
 
 <div class="documents-container">
     <div class="documents-wrapper">
-        
+
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-header-content">
@@ -696,7 +696,7 @@
                         <i class="fas fa-list"></i>
                         Your Documents
                     </h2>
-                    
+
                     <!-- Filters -->
                     <form method="GET" class="filters">
                         <select name="category" class="filter-select" onchange="this.form.submit()">
@@ -706,14 +706,14 @@
                             <option value="memo" {{ ($currentCategory ?? '') == 'memo' ? 'selected' : '' }}>Memo</option>
                             <option value="other" {{ ($currentCategory ?? '') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
-                        
+
                         <select name="visibility" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Visibility</option>
                             <option value="public" {{ ($currentVisibility ?? '') == 'public' ? 'selected' : '' }}>Public</option>
                             <option value="private" {{ ($currentVisibility ?? '') == 'private' ? 'selected' : '' }}>Private</option>
                         </select>
-                        
-                        <input type="text" name="search" class="search-box" placeholder="Search documents..." 
+
+                        <input type="text" name="search" class="search-box" placeholder="Search documents..."
                                value="{{ $currentSearch ?? '' }}" onchange="this.form.submit()">
                     </form>
                 </div>
@@ -724,7 +724,7 @@
                             <div class="document-icon {{ getFileTypeClass($document->file_extension ?? '') }}">
                                 <i class="fas {{ getFileIcon($document->file_extension ?? '') }}"></i>
                             </div>
-                            
+
                             <div class="document-info">
                                 <h4 class="document-title">{{ $document->title }}</h4>
                                 <div class="document-meta">
@@ -738,7 +738,7 @@
                                     <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #6b7280;">{{ Str::limit($document->description, 100) }}</p>
                                 @endif
                             </div>
-                            
+
                             <div class="document-actions">
                                 <button onclick="viewDocument('{{ $document->id }}', '{{ addslashes($document->title) }}', '{{ addslashes($document->description ?? '') }}', '{{ $document->category }}', '{{ $document->visibility }}', '{{ $document->downloads ?? 0 }}', '{{ $document->created_at->format('Y-m-d') }}', '{{ $document->file_size ?? 'Unknown' }}', '{{ $document->original_filename ?? $document->title }}')" class="btn-info" title="View Document">
                                     <i class="fas fa-eye"></i>
@@ -764,13 +764,8 @@
                             </button>
                         </div>
                     @endforelse
-                    
-                    <!-- Pagination -->
-                    @if(isset($documents) && $documents->hasPages())
-                        <div class="pagination">
-                            {{ $documents->appends(request()->query())->links() }}
-                        </div>
-                    @endif
+
+
                 </div>
             </div>
 
@@ -816,28 +811,28 @@
             <h3><i class="fas fa-upload"></i> Upload Document</h3>
             <button class="close-modal" onclick="closeModal('uploadModal')">&times;</button>
         </div>
-        
+
         <form action="{{ route('staff.documents.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-            
+
             <div class="form-group">
                 <label class="form-label">Document Title *</label>
-                <input type="text" name="title" class="form-control" required 
+                <input type="text" name="title" class="form-control" required
                        placeholder="Enter document title" value="{{ old('title') }}">
                 @error('title')
                     <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Description</label>
-                <textarea name="description" class="form-control" rows="3" 
+                <textarea name="description" class="form-control" rows="3"
                           placeholder="Optional description">{{ old('description') }}</textarea>
                 @error('description')
                     <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Category *</label>
                 <select name="category" class="form-control" required>
@@ -851,7 +846,7 @@
                     <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Visibility *</label>
                 <select name="visibility" class="form-control" required>
@@ -863,7 +858,7 @@
                     <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             <div class="form-group">
     <label class="form-label">
         <i class="fas fa-building text-gray-400"></i>
@@ -893,14 +888,14 @@
                     <p style="margin: 0; color: #6b7280;">Click to select file or drag and drop</p>
                     <p style="margin: 0; font-size: 0.75rem; color: #9ca3af;">Max size: 10MB</p>
                 </div>
-                <input type="file" id="fileInput" name="file" class="hidden" required 
+                <input type="file" id="fileInput" name="file" class="hidden" required
                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif">
                 <div id="fileName" style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;"></div>
                 @error('file')
                     <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
-            
+
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
                 <button type="button" onclick="closeModal('uploadModal')" class="btn-secondary">
                     <i class="fas fa-times"></i>Cancel
@@ -920,11 +915,11 @@
             <h3><i class="fas fa-eye"></i> <span id="viewDocumentTitle">Document Details</span></h3>
             <button class="close-modal" onclick="closeModal('viewModal')">&times;</button>
         </div>
-        
+
         <div id="viewDocumentContent">
             <!-- Content will be loaded dynamically -->
         </div>
-        
+
         <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <button id="viewDownloadBtn" class="btn-secondary">
                 <i class="fas fa-download"></i>Download
@@ -945,15 +940,15 @@
             <h3><i class="fas fa-trash text-red-600"></i> Confirm Delete</h3>
             <button class="close-modal" onclick="closeModal('deleteModal')">&times;</button>
         </div>
-        
+
         <div class="delete-warning">
             <h4><i class="fas fa-exclamation-triangle"></i> Warning!</h4>
             <p>This action cannot be undone. The document and its file will be permanently deleted.</p>
         </div>
-        
+
         <p>Are you sure you want to delete the document:</p>
         <p style="font-weight: 600; color: #111827; margin: 1rem 0;"><span id="deleteDocumentTitle"></span></p>
-        
+
         <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <button onclick="closeModal('deleteModal')" class="btn-secondary">
                 <i class="fas fa-times"></i>Cancel
@@ -986,7 +981,7 @@
     // View document function
     function viewDocument(documentId, title, description, category, visibility, downloads, createdAt, fileSize, filename) {
         console.log('Viewing document:', documentId); // Debug log
-        
+
         // Update modal title
         document.getElementById('viewDocumentTitle').textContent = title;
 
@@ -1054,7 +1049,7 @@
     // Delete confirmation function
     function confirmDelete(documentId, documentTitle) {
         console.log('Confirming delete for:', documentId, documentTitle); // Debug log
-        
+
         document.getElementById('deleteDocumentTitle').textContent = documentTitle;
         document.getElementById('deleteForm').action = `/staff/documents/${documentId}`;
         openModal('deleteModal');
@@ -1074,22 +1069,22 @@
 
     // Drag and drop functionality
     const uploadArea = document.querySelector('.file-upload-area');
-    
+
     if (uploadArea) {
         uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             this.classList.add('dragover');
         });
-        
+
         uploadArea.addEventListener('dragleave', function(e) {
             e.preventDefault();
             this.classList.remove('dragover');
         });
-        
+
         uploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
             this.classList.remove('dragover');
-            
+
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 document.getElementById('fileInput').files = files;

@@ -391,36 +391,36 @@
         .announcement-detail-wrapper {
             padding: 0 0.5rem;
         }
-        
+
         .page-header-content {
             flex-direction: column;
             text-align: center;
         }
-        
+
         .announcement-header {
             padding: 1.5rem;
         }
-        
+
         .announcement-title {
             font-size: 1.5rem;
         }
-        
+
         .announcement-meta {
             flex-direction: column;
             align-items: flex-start;
             gap: 1rem;
         }
-        
+
         .announcement-body {
             padding: 1.5rem;
         }
-        
+
         .announcement-footer {
             padding: 1.5rem;
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .footer-info {
             flex-direction: column;
             align-items: flex-start;
@@ -431,7 +431,7 @@
 
 <div class="announcement-detail-container">
     <div class="announcement-detail-wrapper">
-        
+
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-header-content">
@@ -476,7 +476,7 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h1 class="announcement-title">{{ $announcement->title }}</h1>
-                
+
                 <div class="announcement-meta">
                     <div class="meta-item">
                         <div class="meta-icon">
@@ -484,26 +484,26 @@
                         </div>
                         <span>{{ $announcement->user->name ?? 'Admin' }}</span>
                     </div>
-                    
+
                     <div class="meta-item">
                         <div class="meta-icon">
                             <i class="fas fa-calendar"></i>
                         </div>
                         <span>{{ $announcement->created_at->format('M d, Y') }}</span>
                     </div>
-                    
+
                     <div class="meta-item">
                         <div class="meta-icon">
                             <i class="fas fa-clock"></i>
                         </div>
                         <span>{{ $announcement->created_at->diffForHumans() }}</span>
                     </div>
-                    
+
                     <span class="category-badge category-{{ $announcement->category }}">
                         <i class="fas fa-tag"></i>
                         {{ $announcement->category_display }}
                     </span>
-                    
+
                     @if($announcement->is_department_specific)
                         <span class="department-badge">
                             <i class="fas fa-building"></i>
@@ -517,12 +517,12 @@
                     @endif
                 </div>
             </div>
-            
+
             <div class="announcement-body">
                 <div class="announcement-content">
                     {!! nl2br(e($announcement->body)) !!}
                 </div>
-                
+
                 @if($announcement->attachment)
                     <div class="attachment-section">
                         <div class="attachment-icon">
@@ -538,9 +538,9 @@
                         </div>
                     </div>
                 @endif
-                
+
                 @if($announcement->expiry_date)
-                    <div class="alert alert-warning">
+                    <div class="alert alert-success">
                         <i class="fas fa-calendar-times text-xl"></i>
                         <div>
                             <p style="margin: 0; font-weight: 600;">Expiry Information</p>
@@ -552,19 +552,19 @@
                     </div>
                 @endif
             </div>
-            
+
             <div class="announcement-footer">
                 <div class="footer-info">
                     <div class="footer-info-item">
                         <i class="fas fa-eye"></i>
                         <span>{{ number_format($announcement->views) }} views</span>
                     </div>
-                    
+
                     <div class="footer-info-item">
                         <i class="fas fa-users"></i>
                         <span>{{ $announcement->visibility_display }} visibility</span>
                     </div>
-                    
+
                     @if($announcement->updated_at->ne($announcement->created_at))
                         <div class="footer-info-item">
                             <i class="fas fa-edit"></i>
@@ -572,22 +572,22 @@
                         </div>
                     @endif
                 </div>
-                
+
                 <div class="share-section">
                     <span style="font-size: 0.875rem; color: #6b7280; margin-right: 0.5rem;">Share:</span>
-                    
+
                     <button class="share-btn facebook" onclick="shareOnFacebook()" title="Share on Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </button>
-                    
+
                     <button class="share-btn twitter" onclick="shareOnTwitter()" title="Share on Twitter">
                         <i class="fab fa-twitter"></i>
                     </button>
-                    
+
                     <button class="share-btn whatsapp" onclick="shareOnWhatsApp()" title="Share on WhatsApp">
                         <i class="fab fa-whatsapp"></i>
                     </button>
-                    
+
                     <button class="share-btn" style="background: #6b7280;" onclick="copyLink()" title="Copy Link">
                         <i class="fas fa-link"></i>
                     </button>
@@ -625,7 +625,7 @@
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check"></i>';
             btn.style.background = '#10b981';
-            
+
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.style.background = '#6b7280';
@@ -661,7 +661,7 @@
             }
         }
     `;
-    
+
     const styleSheet = document.createElement("style");
     styleSheet.innerText = printStyles;
     document.head.appendChild(styleSheet);

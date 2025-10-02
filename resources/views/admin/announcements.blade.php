@@ -547,16 +547,16 @@
         .content-layout {
             grid-template-columns: 1fr;
         }
-        
+
         .stats-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .announcement-header {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .announcement-actions {
             width: 100%;
             justify-content: flex-end;
@@ -566,7 +566,7 @@
 
 <div class="announcements-container">
     <div class="announcements-wrapper">
-        
+
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-header-content">
@@ -652,7 +652,7 @@
                         <i class="fas fa-list"></i>
                         All Announcements
                     </h2>
-                    
+
                     <!-- Filters -->
                     <form method="GET" class="filters">
                         <select name="staff" class="filter-select" onchange="this.form.submit()">
@@ -663,7 +663,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        
+
                         <select name="category" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Categories</option>
                             <option value="general" {{ ($currentCategory ?? '') == 'general' ? 'selected' : '' }}>General</option>
@@ -673,22 +673,22 @@
                             <option value="memo" {{ ($currentCategory ?? '') == 'memo' ? 'selected' : '' }}>Memo</option>
                             <option value="other" {{ ($currentCategory ?? '') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
-                        
+
                         <select name="visibility" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Visibility</option>
                             <option value="public" {{ ($currentVisibility ?? '') == 'public' ? 'selected' : '' }}>Public</option>
                             <option value="staff" {{ ($currentVisibility ?? '') == 'staff' ? 'selected' : '' }}>Staff</option>
                             <option value="student" {{ ($currentVisibility ?? '') == 'student' ? 'selected' : '' }}>Student</option>
                         </select>
-                        
+
                         <select name="status" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Status</option>
                             <option value="active" {{ ($currentStatus ?? '') == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="expired" {{ ($currentStatus ?? '') == 'expired' ? 'selected' : '' }}>Expired</option>
                             <option value="inactive" {{ ($currentStatus ?? '') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                         </select>
-                        
-                        <input type="text" name="search" class="search-box" placeholder="Search announcements..." 
+
+                        <input type="text" name="search" class="search-box" placeholder="Search announcements..."
                                value="{{ $currentSearch ?? '' }}" onchange="this.form.submit()">
                     </form>
                 </div>
@@ -719,7 +719,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                
+
                                 <div class="announcement-actions">
                                     <a href="{{ route('admin.announcements.edit', $announcement) }}" class="btn-success" title="Edit">
                                         <i class="fas fa-edit"></i>
@@ -734,12 +734,12 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div class="announcement-body">
                                 <div class="announcement-content">
                                     {{ Str::limit(strip_tags($announcement->body), 200) }}
                                 </div>
-                                
+
                                 @if($announcement->attachment)
                                     <div class="attachment-info">
                                         <div class="attachment-icon">
@@ -764,13 +764,8 @@
                             </a>
                         </div>
                     @endforelse
-                    
-                    <!-- Pagination -->
-                    @if(isset($announcements) && $announcements->hasPages())
-                        <div class="pagination">
-                            {{ $announcements->appends(request()->query())->links() }}
-                        </div>
-                    @endif
+
+
                 </div>
             </div>
 
@@ -834,15 +829,15 @@
             <h3><i class="fas fa-trash text-red-600"></i> Confirm Delete</h3>
             <button class="close-modal" onclick="closeModal('deleteModal')">&times;</button>
         </div>
-        
+
         <div class="delete-warning">
             <h4><i class="fas fa-exclamation-triangle"></i> Warning!</h4>
             <p>This action cannot be undone. The announcement and its attachment will be permanently deleted.</p>
         </div>
-        
+
         <p>Are you sure you want to delete the announcement:</p>
         <p style="font-weight: 600; color: #111827; margin: 1rem 0;"><span id="deleteAnnouncementTitle"></span></p>
-        
+
         <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <button onclick="closeModal('deleteModal')" class="btn-secondary">
                 <i class="fas fa-times"></i>Cancel
@@ -871,7 +866,7 @@
     // Delete confirmation function
     function confirmDelete(announcementId, announcementTitle) {
         console.log('Confirming delete for:', announcementId, announcementTitle); // Debug log
-        
+
         document.getElementById('deleteAnnouncementTitle').textContent = announcementTitle;
         document.getElementById('deleteForm').action = `/admin/announcements/${announcementId}`;
         openModal('deleteModal');

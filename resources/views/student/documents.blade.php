@@ -352,12 +352,12 @@
         .stats-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .page-header-content {
             flex-direction: column;
             text-align: center;
         }
-        
+
         .document-header {
             flex-direction: column;
             align-items: flex-start;
@@ -383,7 +383,7 @@
 
 <div class="documents-container">
     <div class="documents-wrapper">
-        
+
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-header-content">
@@ -447,7 +447,7 @@
                     <i class="fas fa-list"></i>
                     Available Documents
                 </h2>
-                
+
                 <!-- Filters -->
                 <form method="GET" class="filters">
                     <select name="category" class="filter-select" onchange="this.form.submit()">
@@ -457,8 +457,8 @@
                         <option value="memo" {{ ($currentCategory ?? '') == 'memo' ? 'selected' : '' }}>Memos</option>
                         <option value="other" {{ ($currentCategory ?? '') == 'other' ? 'selected' : '' }}>Other</option>
                     </select>
-                    
-                    <input type="text" name="search" class="search-box" placeholder="Search documents..." 
+
+                    <input type="text" name="search" class="search-box" placeholder="Search documents..."
                            value="{{ $currentSearch ?? '' }}" onchange="this.form.submit()">
                 </form>
             </div>
@@ -470,7 +470,7 @@
                             <div class="file-icon" style="background: {{ $document->file_color }}20; color: {{ $document->file_color }};">
                                 <i class="{{ $document->file_icon }}"></i>
                             </div>
-                            
+
                             <div class="document-info">
                                 <h3 class="document-title">{{ $document->title }}</h3>
                                 <div class="document-meta">
@@ -496,14 +496,14 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="document-body">
                             @if($document->description)
                                 <div class="document-description">
                                     {{ $document->description }}
                                 </div>
                             @endif
-                            
+
                             <div class="document-actions">
                                 <a href="{{ route('student.documents.download', $document) }}" class="btn-success">
                                     <i class="fas fa-download"></i> Download
@@ -518,13 +518,8 @@
                         <p>There are no documents available for your department at the moment.</p>
                     </div>
                 @endforelse
-                
-                <!-- Pagination -->
-                @if($documents->hasPages())
-                    <div class="pagination">
-                        {{ $documents->appends(request()->query())->links() }}
-                    </div>
-                @endif
+
+
             </div>
         </div>
     </div>
